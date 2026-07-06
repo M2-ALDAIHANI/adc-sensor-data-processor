@@ -46,11 +46,31 @@ void adc_compute_channel_reports(const ADCSample *samples,
         }
 
         size_t voltage_index = 0;
+        size_t overvoltage_count = 0;
+        size_t undervoltage_count = 0;
+        size_t sensor_fault_count = 0;
+        size_t out_of_range_count = 0;
 
         for (size_t i = 0; i < sample_count; i++) {
             if (samples[i].channel_id == channel) {
                 voltages[voltage_index] = samples[i].voltage;
                 voltage_index++;
+
+                if (samples[i].voltage > 3.0) {
+                    overvoltage_count++;
+                }
+
+                if (samples[i].voltage < 0.3) {
+                    undervoltage_count++;
+                }
+
+                if (samples[i].status_flags & 0x01) {
+                    sensor_fault_count++;
+                }
+
+                if (samples[i].status_flags & 0x02) {
+                    out_of_range_count++;
+                }
             }
         }
 
@@ -60,10 +80,10 @@ void adc_compute_channel_reports(const ADCSample *samples,
         reports[channel].min_voltage = stats_min(voltages, count);
         reports[channel].max_voltage = stats_max(voltages, count);
         reports[channel].standard_deviation = stats_standard_deviation(voltages, count);
-        reports[channel].overvoltage_count = 0;
-        reports[channel].undervoltage_count = 0;
-        reports[channel].sensor_fault_count = 0;
-        reports[channel].out_of_range_count = 0;
+        reports[channel].overvoltage_count = overvoltage_count;
+        reports[channel].undervoltage_count = undervoltage_count;
+        reports[channel].sensor_fault_count = sensor_fault_count;
+        reports[channel].out_of_range_count = out_of_range_count;
 
         free(voltages);
     }
