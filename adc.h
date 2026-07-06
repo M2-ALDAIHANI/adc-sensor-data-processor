@@ -64,5 +64,8 @@ typedef struct {
 
 double adc_raw_to_voltage(uint16_t raw_value);
 void adc_convert_voltages(ADCSample *samples, size_t count);
+void adc_compute_channel_reports(const ADCSample *samples,
+                                 size_t sample_count,
+                                 ChannelReport reports[ADC_CHANNEL_COUNT]);
 
 #endif
