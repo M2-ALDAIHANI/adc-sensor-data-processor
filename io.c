@@ -172,3 +172,60 @@ int io_write_results_file(const char *filename,
     fclose(file);
     return 1;
 }
+
+int io_write_fault_report_file(const char *filename,
+                               const ADCSample *samples,
+                               size_t sample_count) {
+    FILE *file = fopen(filename, "w");
+
+    if (file == NULL) {
+        printf("Error: could not create fault report file '%s'.\n", filename);
+        return 0;
+    }
+
+    fprintf(file, "ADC FAULT REPORT\n");
+    fprintf(file, "================\n\n");
+
+    for (size_t i = 0; i < sample_count; i++) {
+        int has_fault = 0;
+
+        if (samples[i].voltage > 3.0 ||
+            samples[i].voltage < 0.3 ||
+            (samples[i].status_flags & 0x01) ||
+            (samples[i].status_flags & 0x02)) {
+            has_fault = 1;
+        }
+
+        if (has_fault) {
+            fprintf(file,
+                    "Record %zu | Time %.4f s | Channel %u | Voltage %.6f V | Flags 0x%02X | Seq %u | ",
+                    i,
+                    samples[i].timestamp,
+                    samples[i].channel_id,
+                    samples[i].voltage,
+                    samples[i].status_flags,
+                    samples[i].sequence_number);
+
+            if (samples[i].voltage > 3.0) {
+                fprintf(file, "OVERVOLTAGE ");
+            }
+
+            if (samples[i].voltage < 0.3) {
+                fprintf(file, "UNDERVOLTAGE ");
+            }
+
+            if (samples[i].status_flags & 0x01) {
+                fprintf(file, "SENSOR_FAULT ");
+            }
+
+            if (samples[i].status_flags & 0x02) {
+                fprintf(file, "OUT_OF_RANGE ");
+            }
+
+            fprintf(file, "\n");
+        }
+    }
+
+    fclose(file);
+    return 1;
+}
