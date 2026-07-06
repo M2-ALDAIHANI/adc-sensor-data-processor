@@ -1,0 +1,4 @@
+*.exe
+results.txt
+fault_report.txt
+adc_sensor_log.bin
