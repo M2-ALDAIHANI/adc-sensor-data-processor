@@ -110,3 +110,65 @@ ADCSample *io_read_adc_file(const char *filename, ADCHeader *header) {
     free(binary_records);
     return samples;
 }
+
+int io_write_results_file(const char *filename,
+                          const ADCHeader *header,
+                          const ChannelReport reports[ADC_CHANNEL_COUNT],
+                          const SequenceGap *gaps,
+                          size_t gap_count) {
+    FILE *file = fopen(filename, "w");
+
+    if (file == NULL) {
+        printf("Error: could not create results file '%s'.\n", filename);
+        return 0;
+    }
+
+    fprintf(file, "ADC SENSOR ANALYSIS REPORT\n");
+    fprintf(file, "==========================\n\n");
+
+    fprintf(file, "FILE HEADER\n");
+    fprintf(file, "-----------\n");
+    fprintf(file, "Magic number   : 0x%08X\n", header->magic);
+    fprintf(file, "Version        : %u\n", header->version);
+    fprintf(file, "Channel count  : %u\n", header->channel_count);
+    fprintf(file, "Record count   : %u\n", header->record_count);
+    fprintf(file, "Sample rate    : %u Hz\n\n", header->sample_rate_hz);
+
+    fprintf(file, "PER-CHANNEL STATISTICS\n");
+    fprintf(file, "----------------------\n");
+
+    for (size_t i = 0; i < ADC_CHANNEL_COUNT; i++) {
+        fprintf(file, "Channel %u\n", reports[i].channel_id);
+        fprintf(file, "  Samples              : %zu\n", reports[i].sample_count);
+        fprintf(file, "  Mean voltage          : %.6f V\n", reports[i].mean_voltage);
+        fprintf(file, "  Minimum voltage       : %.6f V\n", reports[i].min_voltage);
+        fprintf(file, "  Maximum voltage       : %.6f V\n", reports[i].max_voltage);
+        fprintf(file, "  Standard deviation    : %.6f V\n", reports[i].standard_deviation);
+        fprintf(file, "  Overvoltage faults    : %zu\n", reports[i].overvoltage_count);
+        fprintf(file, "  Undervoltage faults   : %zu\n", reports[i].undervoltage_count);
+        fprintf(file, "  Sensor fault flags    : %zu\n", reports[i].sensor_fault_count);
+        fprintf(file, "  Out-of-range flags    : %zu\n\n", reports[i].out_of_range_count);
+    }
+
+    fprintf(file, "SEQUENCE INTEGRITY\n");
+    fprintf(file, "------------------\n");
+
+    if (gap_count == 0) {
+        fprintf(file, "No sequence gaps detected.\n");
+    } else {
+        fprintf(file, "Sequence gaps detected: %zu\n", gap_count);
+
+        for (size_t i = 0; i < gap_count; i++) {
+            fprintf(file,
+                    "  Gap %zu: previous=%u, next=%u, missing=%u to %u\n",
+                    i + 1,
+                    gaps[i].previous_sequence,
+                    gaps[i].next_sequence,
+                    gaps[i].missing_from,
+                    gaps[i].missing_to);
+        }
+    }
+
+    fclose(file);
+    return 1;
+}
