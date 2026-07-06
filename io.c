@@ -1,5 +1,5 @@
 #include "io.h"
-
+#include "adc.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -104,6 +104,8 @@ ADCSample *io_read_adc_file(const char *filename, ADCHeader *header) {
         samples[i].status_flags = binary_records[i].status_flags;
         samples[i].sequence_number = binary_records[i].sequence_number;
     }
+
+    adc_convert_voltages(samples, header->record_count);
 
     free(binary_records);
     return samples;

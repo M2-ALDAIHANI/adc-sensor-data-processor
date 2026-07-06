@@ -62,4 +62,7 @@ typedef struct {
     size_t out_of_range_count;
 } ChannelReport;
 
+double adc_raw_to_voltage(uint16_t raw_value);
+void adc_convert_voltages(ADCSample *samples, size_t count);
+
 #endif
