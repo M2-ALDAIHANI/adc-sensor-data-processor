@@ -68,4 +68,9 @@ void adc_compute_channel_reports(const ADCSample *samples,
                                  size_t sample_count,
                                  ChannelReport reports[ADC_CHANNEL_COUNT]);
 
+size_t adc_check_sequence_gaps(const ADCSample *samples,
+                               size_t sample_count,
+                               SequenceGap *gaps,
+                               size_t max_gaps);
+
 #endif
