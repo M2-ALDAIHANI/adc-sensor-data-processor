@@ -88,3 +88,28 @@ void adc_compute_channel_reports(const ADCSample *samples,
         free(voltages);
     }
 }
+
+size_t adc_check_sequence_gaps(const ADCSample *samples,
+                               size_t sample_count,
+                               SequenceGap *gaps,
+                               size_t max_gaps) {
+    size_t gap_count = 0;
+
+    for (size_t i = 0; i + 1 < sample_count; i++) {
+        uint32_t current_sequence = samples[i].sequence_number;
+        uint32_t next_sequence = samples[i + 1].sequence_number;
+
+        if (next_sequence > current_sequence + 1) {
+            if (gap_count < max_gaps) {
+                gaps[gap_count].previous_sequence = current_sequence;
+                gaps[gap_count].next_sequence = next_sequence;
+                gaps[gap_count].missing_from = current_sequence + 1;
+                gaps[gap_count].missing_to = next_sequence - 1;
+            }
+
+            gap_count++;
+        }
+    }
+
+    return gap_count;
+}
